@@ -12,6 +12,14 @@ export function isAllowedEmail(email: string | null | undefined): boolean {
   return allowedEmails().includes(email.trim().toLowerCase());
 }
 
+const testLoginEmail = "francesco90campo@gmail.com";
+
+export function loginEmails(): string[] {
+  const emails = allowedEmails();
+  if (process.env.NODE_ENV === "development") return emails;
+  return emails.filter((email) => email !== testLoginEmail);
+}
+
 export function magicLinkFailure(message: string): string {
   const text = message.toLowerCase();
   if (text.includes("redirect") || text.includes("not allowed")) {
