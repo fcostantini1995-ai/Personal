@@ -1,0 +1,82 @@
+import type { Ledger } from "./types";
+
+/** Centesimi. Settembre resta il mese corrente; luglio e agosto servono a scorrere il pregresso. */
+export const seedLedger: Ledger = {
+  closings: [
+    { date: "2026-07-15", cash: 39000, electronic: 45000, drawer: 40000 },
+    { date: "2026-08-03", cash: 36000, electronic: 48000, drawer: 36000 },
+    { date: "2026-08-20", cash: 41000, electronic: 52000, drawer: 44000 },
+    { date: "2026-09-15", cash: 50000, electronic: 70000, drawer: 52000 },
+    { date: "2026-09-28", cash: 42000, electronic: 61000, drawer: 45000 },
+    { date: "2026-09-29", cash: 38000, electronic: 54000, drawer: 38000 },
+    { date: "2026-09-30", cash: 40000, electronic: 60000, drawer: 45000 },
+  ],
+  expenses: [
+    {
+      id: "exp-fattura-aperta",
+      kind: "fattura",
+      amount: 24000,
+      documentDate: "2026-09-28",
+      paymentDate: null,
+      invoiceNumber: "2026/118",
+      terms: "30",
+    },
+    {
+      id: "exp-mercato",
+      kind: "merce_senza_fattura",
+      amount: 3600,
+      documentDate: "2026-09-29",
+      paymentDate: "2026-09-29",
+      terms: "scarico",
+    },
+    {
+      id: "exp-affitto",
+      kind: "affitto",
+      amount: 120000,
+      documentDate: "2026-09-28",
+      paymentDate: "2026-09-28",
+      terms: "scarico",
+    },
+    {
+      id: "exp-f24",
+      kind: "f24",
+      amount: 89000,
+      documentDate: "2026-09-16",
+      paymentDate: "2026-09-16",
+      terms: "scarico",
+    },
+    {
+      id: "exp-affitto-agosto",
+      kind: "affitto",
+      amount: 120000,
+      documentDate: "2026-08-03",
+      paymentDate: "2026-08-03",
+      terms: "scarico",
+    },
+    {
+      id: "exp-bolletta-agosto",
+      kind: "bolletta",
+      amount: 8500,
+      documentDate: "2026-08-12",
+      paymentDate: "2026-08-12",
+      terms: "scarico",
+    },
+    {
+      id: "exp-contributi-luglio",
+      kind: "contributi",
+      amount: 45000,
+      documentDate: "2026-07-15",
+      paymentDate: "2026-07-15",
+      terms: "scarico",
+    },
+    {
+      id: "exp-fattura-pagata",
+      kind: "fattura",
+      amount: 18000,
+      documentDate: "2026-09-10",
+      paymentDate: "2026-09-16",
+      invoiceNumber: "2026/101",
+      terms: "15",
+    },
+  ],
+};

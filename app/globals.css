@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f0e6;
+  --foreground: #2a2118;
+  --primary: #9e1a2a;
+  --primary-foreground: #fffaf6;
+  --accent: #9e1a2a;
+  --accent-foreground: #fffaf6;
+  --card: #fffdf8;
+  --muted: #efe4d4;
+  --muted-foreground: #5e534a;
+  --border: #2a2118;
+  --destructive: #9e1a2a;
+  --ring: #9e1a2a;
+  --success: #1f6b45;
+  --success-bg: #e5f2e8;
+  --warning: #7a4e12;
+  --warning-bg: #f8e7c8;
+  --gold: #a9782e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-gold: var(--gold);
+  --font-sans: var(--font-inter), Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-inter), Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+h1 {
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
