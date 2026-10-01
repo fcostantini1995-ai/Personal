@@ -1,4 +1,4 @@
-import { dayTotal, isPaid, type Closing, type Expense, type Ledger } from "./types";
+import { isPaid, unregistered, type Closing, type Expense, type Ledger } from "./types";
 
 export type Range = { start: string; end: string; label: string };
 
@@ -82,6 +82,9 @@ export function inRange(date: string, range: Range): boolean {
 }
 
 export type PeriodTotals = {
+  cash: number;
+  electronic: number;
+  unregistered: number;
   income: number;
   paidOut: number;
   result: number;
@@ -94,7 +97,10 @@ export function periodTotals(ledger: Ledger, range: Range): PeriodTotals {
   const closings = ledger.closings
     .filter((closing) => inRange(closing.date, range))
     .sort((a, b) => a.date.localeCompare(b.date));
-  const income = closings.reduce((sum, closing) => sum + dayTotal(closing), 0);
+  const cash = closings.reduce((sum, closing) => sum + closing.cash, 0);
+  const electronic = closings.reduce((sum, closing) => sum + closing.electronic, 0);
+  const unregisteredCash = closings.reduce((sum, closing) => sum + unregistered(closing), 0);
+  const income = cash + electronic + unregisteredCash;
   const paid = ledger.expenses
     .filter((expense) => expense.paymentDate && inRange(expense.paymentDate, range))
     .sort((a, b) => (a.paymentDate ?? "").localeCompare(b.paymentDate ?? ""));
@@ -106,6 +112,9 @@ export function periodTotals(ledger: Ledger, range: Range): PeriodTotals {
     )
     .sort((a, b) => b.documentDate.localeCompare(a.documentDate));
   return {
+    cash,
+    electronic,
+    unregistered: unregisteredCash,
     income,
     paidOut,
     result: income - paidOut,
@@ -117,6 +126,9 @@ export function periodTotals(ledger: Ledger, range: Range): PeriodTotals {
 
 export type MonthRow = {
   label: string;
+  cash: number;
+  electronic: number;
+  unregistered: number;
   income: number;
   paidOut: number;
   result: number;
@@ -137,6 +149,9 @@ export function monthBreakdown(ledger: Ledger, range: Range): MonthRow[] {
     const label = new Intl.DateTimeFormat("it-IT", { month: "long" }).format(start);
     rows.push({
       label: label.charAt(0).toUpperCase() + label.slice(1),
+      cash: totals.cash,
+      electronic: totals.electronic,
+      unregistered: totals.unregistered,
       income: totals.income,
       paidOut: totals.paidOut,
       result: totals.result,

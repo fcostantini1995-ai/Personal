@@ -60,6 +60,17 @@ h1 {
   outline-offset: 2px;
 }
 
+@media print {
+  body {
+    background: #fff;
+  }
+
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

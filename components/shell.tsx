@@ -42,11 +42,11 @@ export function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen md:pl-60">
-      <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-primary" aria-hidden="true" />
+    <div className="min-h-screen print:pl-0 md:pl-60">
+      <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-primary print:hidden" aria-hidden="true" />
       <nav
         aria-label="Sezioni"
-        className="fixed inset-x-0 bottom-0 z-50 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:inset-y-0 md:right-auto md:w-60 md:flex-col md:gap-2 md:border-r md:border-t-0 md:px-3 md:py-4 md:pb-4"
+        className="fixed inset-x-0 bottom-0 z-50 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] print:hidden md:inset-y-0 md:right-auto md:w-60 md:flex-col md:gap-2 md:border-r md:border-t-0 md:px-3 md:py-4 md:pb-4"
       >
         <div className="hidden px-3 pb-4 md:block">
           <BrandMark size="sm" />
@@ -69,7 +69,7 @@ export function Shell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 print:hidden">
         <div className="flex items-center justify-between px-4 py-3 md:px-8">
         <div className="md:hidden">
           <BrandMark size="sm" />
@@ -89,7 +89,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </button>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 md:px-8 md:pb-12 md:pt-6">{children}</main>
+      <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 print:max-w-none print:px-0 print:pb-0 print:pt-0 md:px-8 md:pb-12 md:pt-6">{children}</main>
     </div>
   );
 }

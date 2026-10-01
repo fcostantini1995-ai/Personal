@@ -1,7 +1,8 @@
 "use client";
 
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, DownloadSimple } from "@phosphor-icons/react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Money } from "@/components/money";
 import { formatMonthYear, formatShort } from "@/lib/money";
@@ -45,12 +46,12 @@ export default function PeriodoPage() {
     <div className="space-y-4">
       <div>
         <p className="text-sm text-muted-foreground">Resoconto · {range.label}</p>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-2 print:justify-center">
           <button
             type="button"
             aria-label="Periodo precedente"
             onClick={() => setAnchor(shiftAnchor(anchor, mode, -1))}
-            className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center border border-border bg-card transition-colors duration-200 hover:bg-muted"
+            className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center border border-border bg-card transition-colors duration-200 hover:bg-muted print:hidden"
           >
             <CaretLeft size={20} aria-hidden="true" />
           </button>
@@ -60,7 +61,7 @@ export default function PeriodoPage() {
             aria-label="Periodo successivo"
             disabled={!forward}
             onClick={() => setAnchor(shiftAnchor(anchor, mode, 1))}
-            className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center border border-border bg-card transition-colors duration-200 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center border border-border bg-card transition-colors duration-200 hover:bg-muted print:hidden disabled:cursor-not-allowed disabled:opacity-40"
           >
             <CaretRight size={20} aria-hidden="true" />
           </button>
@@ -69,13 +70,13 @@ export default function PeriodoPage() {
           <button
             type="button"
             onClick={() => setAnchor(today)}
-            className="mt-2 min-h-11 cursor-pointer text-sm font-semibold text-primary"
+            className="mt-2 min-h-11 cursor-pointer text-sm font-semibold text-primary print:hidden"
           >
             Torna a oggi
           </button>
         )}
       </div>
-      <div className="flex gap-2" role="tablist" aria-label="Tipo di resoconto">
+      <div className="flex gap-2 print:hidden" role="tablist" aria-label="Tipo di resoconto">
         {modes.map((item) => (
           <Tab
             key={item.id}
@@ -85,13 +86,28 @@ export default function PeriodoPage() {
           />
         ))}
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full print:hidden"
+        onClick={() => downloadReport(`Resoconto ${modes.find((item) => item.id === mode)?.label ?? ""} ${title}`)}
+      >
+        <DownloadSimple size={18} aria-hidden="true" />
+        Scarica PDF
+      </Button>
       <Card>
         <CardHeader>
           <CardTitle>Risultato</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Line label="Incassi giornalieri" cents={totals.income} />
-          <Line label="Uscite pagate nel periodo" cents={totals.paidOut} />
+          <IncomeLines
+            cash={totals.cash}
+            electronic={totals.electronic}
+            unregistered={totals.unregistered}
+            income={totals.income}
+            paidOut={totals.paidOut}
+            paidLabel="Uscite pagate nel periodo"
+          />
           <p className="flex items-baseline justify-between gap-3 border-t border-border pt-3 text-xl font-semibold">
             <span>Totale</span>
             <Money cents={totals.result} />
@@ -114,15 +130,17 @@ export default function PeriodoPage() {
                 {months.map((month) => (
                   <li key={month.label} className="border-b border-border pb-3 last:border-0 last:pb-0">
                     <p className="text-sm font-semibold">{month.label}</p>
-                    <p className="mt-1 flex justify-between gap-3 text-sm text-muted-foreground">
-                      <span>Incassi</span>
-                      <Money cents={month.income} />
-                    </p>
-                    <p className="flex justify-between gap-3 text-sm text-muted-foreground">
-                      <span>Uscite pagate</span>
-                      <Money cents={month.paidOut} />
-                    </p>
-                    <p className="flex justify-between gap-3 text-sm font-medium">
+                    <div className="mt-1 space-y-1">
+                      <IncomeLines
+                        cash={month.cash}
+                        electronic={month.electronic}
+                        unregistered={month.unregistered}
+                        income={month.income}
+                        paidOut={month.paidOut}
+                        paidLabel="Uscite pagate"
+                      />
+                    </div>
+                    <p className="mt-2 flex justify-between gap-3 border-t border-border pt-2 text-sm font-medium">
                       <span>Totale</span>
                       <Money cents={month.result} />
                     </p>
@@ -222,10 +240,61 @@ function Tab({
   );
 }
 
-function Line({ label, cents }: { label: string; cents: number }) {
+function downloadReport(filename: string) {
+  const previous = document.title;
+  document.title = filename;
+  const restore = () => {
+    document.title = previous;
+    window.removeEventListener("afterprint", restore);
+  };
+  window.addEventListener("afterprint", restore);
+  window.print();
+}
+
+function IncomeLines({
+  cash,
+  electronic,
+  unregistered,
+  income,
+  paidOut,
+  paidLabel,
+}: {
+  cash: number;
+  electronic: number;
+  unregistered: number;
+  income: number;
+  paidOut: number;
+  paidLabel: string;
+}) {
   return (
-    <p className="flex items-baseline justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{label}</span>
+    <>
+      <Line label="Contante da chiusura cassa" cents={cash} />
+      <Line label="Pagamenti elettronici da chiusura cassa" cents={electronic} />
+      <Line label="Contante non registrato" cents={unregistered} />
+      <Line label="Incassi" cents={income} tone="income" divided />
+      <Line label={paidLabel} cents={paidOut} tone="expense" />
+    </>
+  );
+}
+
+function Line({
+  label,
+  cents,
+  tone = "plain",
+  divided = false,
+}: {
+  label: string;
+  cents: number;
+  tone?: "plain" | "income" | "expense";
+  divided?: boolean;
+}) {
+  const toneClass =
+    tone === "income" ? "font-semibold text-success" : tone === "expense" ? "font-semibold text-primary" : "";
+  return (
+    <p
+      className={`flex items-baseline justify-between gap-3 text-sm ${divided ? "mt-1 border-t border-border pt-3" : ""} ${toneClass}`}
+    >
+      <span className={tone === "plain" ? "text-muted-foreground" : undefined}>{label}</span>
       <Money cents={cents} className="font-medium" />
     </p>
   );
