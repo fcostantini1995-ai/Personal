@@ -2,14 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { payExpense, saveClosing, saveExpense, type ActionResult } from "@/app/actions/ledger";
+import {
+  deleteClosing,
+  deleteExpense,
+  payExpense,
+  saveClosing,
+  saveExpense,
+  updateExpense,
+  type ActionResult,
+} from "@/app/actions/ledger";
 import type { Closing, Expense, Ledger } from "@/lib/types";
 
 type StoreValue = {
   ready: boolean;
   ledger: Ledger;
   upsertClosing: (closing: Closing) => Promise<ActionResult>;
+  removeClosing: (date: string) => Promise<ActionResult>;
   addExpense: (expense: Omit<Expense, "id">) => Promise<ActionResult>;
+  editExpense: (expense: Expense) => Promise<ActionResult>;
+  removeExpense: (id: string) => Promise<ActionResult>;
   markPaid: (id: string, paymentDate: string) => Promise<ActionResult>;
 };
 
@@ -27,8 +38,23 @@ export function LedgerProvider({ ledger, children }: { ledger: Ledger; children:
         if (result.ok) router.refresh();
         return result;
       },
+      removeClosing: async (date) => {
+        const result = await deleteClosing(date);
+        if (result.ok) router.refresh();
+        return result;
+      },
       addExpense: async (expense) => {
         const result = await saveExpense(expense);
+        if (result.ok) router.refresh();
+        return result;
+      },
+      editExpense: async (expense) => {
+        const result = await updateExpense(expense);
+        if (result.ok) router.refresh();
+        return result;
+      },
+      removeExpense: async (id) => {
+        const result = await deleteExpense(id);
         if (result.ok) router.refresh();
         return result;
       },

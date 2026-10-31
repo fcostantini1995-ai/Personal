@@ -13,7 +13,7 @@ import { useStore } from "@/lib/store";
 type Errors = Partial<Record<"cash" | "electronic" | "drawer", string>>;
 
 export default function GiornataPage() {
-  const { ready, ledger, upsertClosing } = useStore();
+  const { ready, ledger, upsertClosing, removeClosing } = useStore();
   const today = todayIso();
   const [date, setDate] = useState(today);
   const [cash, setCash] = useState("");
@@ -21,19 +21,27 @@ export default function GiornataPage() {
   const [drawer, setDrawer] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [saved, setSaved] = useState(false);
+  const [removed, setRemoved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(false);
   const loadedFor = useRef<string | null>(null);
 
   useEffect(() => {
     if (!ready || loadedFor.current === date) return;
+    const dayChanged = loadedFor.current !== null;
     loadedFor.current = date;
-    const existing = ledger.closings.find((closing) => closing.date === date);
-    setCash(existing ? centsToInput(existing.cash) : "");
-    setElectronic(existing ? centsToInput(existing.electronic) : "");
-    setDrawer(existing ? centsToInput(existing.drawer) : "");
+    const existingClosing = ledger.closings.find((closing) => closing.date === date);
+    setCash(existingClosing ? centsToInput(existingClosing.cash) : "");
+    setElectronic(existingClosing ? centsToInput(existingClosing.electronic) : "");
+    setDrawer(existingClosing ? centsToInput(existingClosing.drawer) : "");
     setErrors({});
-    setSaved(false);
-    setSaveError(null);
+    setConfirmDelete(false);
+    if (dayChanged) {
+      setSaved(false);
+      setRemoved(false);
+      setSaveError(null);
+    }
   }, [ready, date, ledger.closings]);
   const summaryRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +82,28 @@ export default function GiornataPage() {
       return;
     }
     setSaveError(null);
+    setRemoved(false);
     setSaved(true);
+  }
+
+  const existing = ledger.closings.some((closing) => closing.date === date);
+
+  async function onDelete() {
+    setPendingDelete(true);
+    const result = await removeClosing(date);
+    setPendingDelete(false);
+    setConfirmDelete(false);
+    if (!result.ok) {
+      setSaveError(result.message);
+      return;
+    }
+    loadedFor.current = null;
+    setCash("");
+    setElectronic("");
+    setDrawer("");
+    setSaved(false);
+    setRemoved(true);
+    setSaveError(null);
   }
 
   const errorItems = [
@@ -91,7 +120,7 @@ export default function GiornataPage() {
   return (
     <div className="space-y-4">
       <DayStepper date={date} today={today} onChange={setDate} label="Chiusura di cassa" />
-      {ledger.closings.some((closing) => closing.date === date) ? (
+      {existing ? (
         <p className="text-sm text-muted-foreground">
           Questa giornata è già salvata. I campi mostrano quei valori e puoi correggerli.
         </p>
@@ -107,7 +136,7 @@ export default function GiornataPage() {
             tabIndex={-1}
             role="alert"
             aria-labelledby="cassa-error-title"
-            className="rounded-lg bg-warning-bg px-3 py-3 text-sm text-warning"
+            className="bg-warning-bg px-3 py-3 text-sm text-warning"
           >
             <h2 id="cassa-error-title" className="font-semibold">
               Controlla i campi
@@ -183,7 +212,7 @@ export default function GiornataPage() {
             <Line label="Non Registrato" cents={preview?.nonRegistrato} />
             <p className="flex items-baseline justify-between gap-3 pt-2 text-base font-semibold">
               <span>Totale incassato finale</span>
-              {preview ? <Money cents={preview.finale} /> : <span className="text-muted-foreground">—</span>}
+              {preview ? <Money cents={preview.finale} /> : <span className="text-muted-foreground">-</span>}
             </p>
           </CardContent>
         </Card>
@@ -200,6 +229,29 @@ export default function GiornataPage() {
             Chiusura salvata. Il resoconto di questa data usa questo totale.
           </p>
         ) : null}
+        {removed ? (
+          <p role="status" className="text-sm text-success">
+            Chiusura eliminata. Il resoconto non conta più questo giorno. Puoi inserirla di nuovo.
+          </p>
+        ) : null}
+        {existing && confirmDelete ? (
+          <div className="space-y-3 border border-foreground bg-warning-bg p-3">
+            <p className="text-sm text-warning">Elimino la chiusura di questo giorno. I totali del periodo si aggiornano.</p>
+            <div className="flex gap-2">
+              <Button variant="accent" className="flex-1" disabled={pendingDelete} onClick={() => void onDelete()}>
+                {pendingDelete ? "Eliminazione" : "Elimina davvero"}
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmDelete(false)}>
+                Annulla
+              </Button>
+            </div>
+          </div>
+        ) : null}
+        {existing && !confirmDelete ? (
+          <Button type="button" variant="outline" className="w-full" onClick={() => setConfirmDelete(true)}>
+            Elimina chiusura
+          </Button>
+        ) : null}
       </form>
     </div>
   );
@@ -209,7 +261,7 @@ function Line({ label, cents }: { label: string; cents?: number }) {
   return (
     <p className="flex items-baseline justify-between gap-3">
       <span className="text-muted-foreground">{label}</span>
-      {cents === undefined ? <span>—</span> : <Money cents={cents} className="font-medium" />}
+      {cents === undefined ? <span className="text-muted-foreground">-</span> : <Money cents={cents} className="font-medium" />}
     </p>
   );
 }

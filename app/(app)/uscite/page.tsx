@@ -13,7 +13,7 @@ import { useStore } from "@/lib/store";
 type Filter = "tutte" | "aperte" | "pagate";
 
 export default function UscitePage() {
-  const { ledger, markPaid } = useStore();
+  const { ledger, markPaid, removeExpense } = useStore();
   const [filter, setFilter] = useState<Filter>("tutte");
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -54,6 +54,15 @@ export default function UscitePage() {
           <li key={expense.id}>
             <ExpenseRow
               expense={expense}
+              onDelete={async () => {
+                const result = await removeExpense(expense.id);
+                setNotice({
+                  ok: result.ok,
+                  text: result.ok
+                    ? `${expense.invoiceNumber ? `Fattura ${expense.invoiceNumber}` : KIND_LABEL[expense.kind]} eliminata. Il resoconto è aggiornato.`
+                    : result.message,
+                });
+              }}
               onPay={async () => {
                 const paidOn = todayIso();
                 const result = await markPaid(expense.id, paidOn);
@@ -99,8 +108,18 @@ function FilterButton({
   );
 }
 
-function ExpenseRow({ expense, onPay }: { expense: Expense; onPay: () => void }) {
+function ExpenseRow({
+  expense,
+  onPay,
+  onDelete,
+}: {
+  expense: Expense;
+  onPay: () => void;
+  onDelete: () => Promise<void>;
+}) {
   const paid = isPaid(expense);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(false);
   return (
     <Card>
       <CardContent className="space-y-3 pt-4">
@@ -115,19 +134,46 @@ function ExpenseRow({ expense, onPay }: { expense: Expense; onPay: () => void })
           </div>
           <Money cents={expense.amount} className="font-semibold" />
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="space-y-3">
           <p
-            className={`rounded-md px-2 py-1 text-xs font-semibold ${
+            className={`inline-block border border-current px-2 py-1 text-xs font-semibold ${
               paid ? "bg-success-bg text-success" : "bg-warning-bg text-warning"
             }`}
           >
             {paid ? `Pagata ${formatShort(expense.paymentDate ?? "")}` : "Da pagare"}
           </p>
-          {!paid ? (
-            <Button variant="outline" onClick={onPay}>
-              Paga fattura
-            </Button>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/uscite/${expense.id}`}
+              className="inline-flex min-h-11 cursor-pointer items-center border border-foreground bg-card px-4 text-xs font-black tracking-[0.14em] uppercase"
+            >
+              Modifica
+            </Link>
+            {!paid ? (
+              <Button variant="outline" onClick={onPay}>
+                Paga fattura
+              </Button>
+            ) : null}
+            {confirmDelete ? (
+              <Button
+                variant="accent"
+                disabled={pendingDelete}
+                onClick={() => {
+                  setPendingDelete(true);
+                  void onDelete().finally(() => {
+                    setPendingDelete(false);
+                    setConfirmDelete(false);
+                  });
+                }}
+              >
+                {pendingDelete ? "Eliminazione" : "Elimina davvero"}
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setConfirmDelete(true)}>
+                Elimina
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

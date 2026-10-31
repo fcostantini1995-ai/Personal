@@ -18,7 +18,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-foreground px-4 text-xs font-black tracking-[0.14em] uppercase transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-foreground px-4 text-xs font-black tracking-[0.14em] uppercase transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] enabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
       {...props}
     />
   );

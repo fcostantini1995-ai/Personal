@@ -18,7 +18,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`h-11 w-full border border-border bg-card px-3 text-base text-foreground transition-colors duration-200 placeholder:text-muted-foreground focus:border-primary ${props.className ?? ""}`}
+      className={`h-11 w-full border border-border bg-card px-3 text-base text-foreground tabular-nums transition-[border-color,background-color] duration-200 placeholder:text-muted-foreground focus:border-primary focus:bg-background ${props.className ?? ""}`}
     />
   );
 }

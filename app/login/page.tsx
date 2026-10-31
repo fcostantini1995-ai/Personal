@@ -11,7 +11,8 @@ export default async function LoginPage({
   const emails = loginEmails();
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10">
+      <div className="fixed inset-x-0 top-0 h-1 bg-primary" aria-hidden="true" />
       <p className="mb-5 flex items-center gap-3 text-[0.68rem] font-bold tracking-[0.16em]">
         <span className="h-0.5 w-8 bg-primary" aria-hidden="true" />
         PESCARA · VIA RAFFAELLO SANZIO 22

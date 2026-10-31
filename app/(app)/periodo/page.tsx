@@ -40,7 +40,7 @@ export default function PeriodoPage() {
       ? range.start.slice(0, 4)
       : mode === "mese"
         ? formatMonthYear(range.start)
-        : `${formatShort(range.start)} – ${formatShort(range.end)}`;
+        : `${formatShort(range.start)} - ${formatShort(range.end)}`;
 
   return (
     <div className="space-y-4">
@@ -55,7 +55,7 @@ export default function PeriodoPage() {
           >
             <CaretLeft size={20} aria-hidden="true" />
           </button>
-          <h1 className="min-w-0 flex-1 text-center text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="min-w-0 flex-1 text-center text-2xl">{title}</h1>
           <button
             type="button"
             aria-label="Periodo successivo"

@@ -62,7 +62,7 @@ export function LoginForm({ emails, errore }: { emails: string[]; errore?: strin
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Magic link</CardTitle>
+        <CardTitle>Link di accesso</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>

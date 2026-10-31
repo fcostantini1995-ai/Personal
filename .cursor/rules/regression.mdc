@@ -1,0 +1,14 @@
+---
+description: Prima di chiudere un intervento sulla cassa, esegui e aggiorna il piano di regressione.
+alwaysApply: true
+---
+
+# Regressione
+
+Prima di dichiarare finito un intervento che tocca schermate, calcoli, salvataggi o accesso, leggi `docs/regression.md`. Esegui la suite fumo e le suite toccate dal cambiamento.
+
+- Non inventare controlli. Se un flusso cambia, aggiorna il piano nello stesso intervento.
+- Cancella fatture e chiusure di prova prima di chiudere. I libri veri restano com'erano.
+- Non inviare magic link di prova: il tetto è 2 email all'ora per tutto il progetto.
+- Non caricare `seed.ts` sul database vero.
+- Nel riepilogo di' quali suite hai eseguito e quale non hai potuto aprire.

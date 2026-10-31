@@ -35,14 +35,20 @@ export function Shell({ children }: { children: ReactNode }) {
 
   if (!ready) {
     return (
-      <main className="grid min-h-screen place-items-center px-4">
+      <main className="grid min-h-dvh place-items-center px-4">
         <BrandMark size="sm" />
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen print:pl-0 md:pl-60">
+    <div className="min-h-dvh print:pl-0 md:pl-60">
+      <a
+        href="#contenuto"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[90] focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+      >
+        Vai al contenuto
+      </a>
       <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-primary print:hidden" aria-hidden="true" />
       <nav
         aria-label="Sezioni"
@@ -74,22 +80,20 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="md:hidden">
           <BrandMark size="sm" />
         </div>
-        <p className="hidden text-sm text-muted-foreground md:block">
-          Un solo accesso · cassa su Supabase
-        </p>
+        <p className="hidden text-sm text-muted-foreground md:block">Pescara, Via Raffaello Sanzio 22</p>
         <button
           type="button"
           onClick={() => {
             void logout();
           }}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-transparent px-3 text-sm font-semibold text-muted-foreground transition-[transform,background-color,color] duration-200 hover:border-foreground hover:bg-card hover:text-foreground active:translate-y-px"
         >
           <SignOut size={18} aria-hidden="true" />
           Esci
         </button>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 print:max-w-none print:px-0 print:pb-0 print:pt-0 md:px-8 md:pb-12 md:pt-6">{children}</main>
+      <main id="contenuto" className="mx-auto w-full max-w-3xl px-4 pb-28 pt-5 print:max-w-none print:px-0 print:pb-0 print:pt-0 md:px-8 md:pb-12 md:pt-8 lg:max-w-4xl">{children}</main>
     </div>
   );
 }

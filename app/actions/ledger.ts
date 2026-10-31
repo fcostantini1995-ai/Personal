@@ -37,38 +37,72 @@ export async function saveClosing(closing: Closing): Promise<ActionResult> {
   return { ok: true };
 }
 
+export async function deleteClosing(date: string): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.ok) return session;
+  if (!isIsoDate(date) || date > todayIso()) {
+    return { ok: false, message: "La data non può essere successiva a oggi." };
+  }
+
+  const { data, error } = await session.supabase
+    .from("closings")
+    .delete()
+    .eq("closing_date", date)
+    .select("id");
+
+  if (error || !data || data.length === 0) {
+    return { ok: false, message: "Non sono riuscito a eliminare la chiusura." };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function saveExpense(expense: Omit<Expense, "id">): Promise<ActionResult> {
   const session = await requireSession();
   if (!session.ok) return session;
-  if (!kinds.has(expense.kind)) return { ok: false, message: "Tipo di uscita non valido." };
-  if (!terms.has(expense.terms ?? "")) return { ok: false, message: "Tipo di pagamento non valido." };
-  if (!isIsoDate(expense.documentDate) || expense.documentDate > todayIso()) {
-    return { ok: false, message: "La consegna non può essere successiva a oggi." };
-  }
-  if (!isCents(expense.amount) || expense.amount <= 0) {
-    return { ok: false, message: "Inserisci un importo maggiore di zero." };
-  }
-  if (expense.paymentDate !== null) {
-    if (!isIsoDate(expense.paymentDate) || expense.paymentDate > todayIso() || expense.paymentDate < expense.documentDate) {
-      return { ok: false, message: "La data di pagamento non è valida." };
-    }
-  }
-  const invoice = expense.invoiceNumber?.trim() ?? "";
-  if (expense.kind === "fattura" && invoice === "") {
-    return { ok: false, message: "Inserisci il numero fattura." };
-  }
+  const parsed = parseExpense(expense);
+  if (!parsed.ok) return parsed;
 
   const { error } = await session.supabase.from("expenses").insert({
     user_id: session.user.id,
-    kind: expense.kind as ExpenseKind,
-    amount_cents: expense.amount,
-    document_date: expense.documentDate,
-    payment_date: expense.paymentDate,
-    invoice_number: expense.kind === "fattura" ? invoice : null,
-    terms: expense.terms as PaymentTerms,
+    ...parsed.row,
   });
 
   if (error) return { ok: false, message: "Non sono riuscito a salvare l'uscita." };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function updateExpense(expense: Expense): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.ok) return session;
+  if (!isUuid(expense.id)) return { ok: false, message: "Uscita non valida." };
+  const parsed = parseExpense(expense);
+  if (!parsed.ok) return parsed;
+
+  const { data, error } = await session.supabase
+    .from("expenses")
+    .update(parsed.row)
+    .eq("id", expense.id)
+    .select("id");
+
+  if (error || !data || data.length === 0) {
+    return { ok: false, message: "Non sono riuscito a modificare l'uscita." };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function deleteExpense(id: string): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.ok) return session;
+  if (!isUuid(id)) return { ok: false, message: "Uscita non valida." };
+
+  const { data, error } = await session.supabase.from("expenses").delete().eq("id", id).select("id");
+
+  if (error || !data || data.length === 0) {
+    return { ok: false, message: "Non sono riuscito a eliminare l'uscita." };
+  }
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -93,6 +127,53 @@ export async function payExpense(id: string, paymentDate: string): Promise<Actio
   }
   revalidatePath("/", "layout");
   return { ok: true };
+}
+
+function parseExpense(
+  expense: Omit<Expense, "id">,
+):
+  | { ok: true; row: {
+      kind: ExpenseKind;
+      amount_cents: number;
+      document_date: string;
+      payment_date: string | null;
+      invoice_number: string | null;
+      terms: PaymentTerms;
+    } }
+  | { ok: false; message: string } {
+  if (!kinds.has(expense.kind)) return { ok: false, message: "Tipo di uscita non valido." };
+  if (!terms.has(expense.terms ?? "")) return { ok: false, message: "Tipo di pagamento non valido." };
+  if (!isIsoDate(expense.documentDate) || expense.documentDate > todayIso()) {
+    return { ok: false, message: "La consegna non può essere successiva a oggi." };
+  }
+  if (!Number.isInteger(expense.amount) || expense.amount <= 0 || expense.amount > 100_000_000_00) {
+    return { ok: false, message: "Inserisci un importo maggiore di zero." };
+  }
+  if (expense.paymentDate !== null) {
+    if (!isIsoDate(expense.paymentDate) || expense.paymentDate > todayIso() || expense.paymentDate < expense.documentDate) {
+      return { ok: false, message: "La data di pagamento non è valida." };
+    }
+  }
+  const invoice = expense.invoiceNumber?.trim() ?? "";
+  if (expense.kind === "fattura" && invoice === "") {
+    return { ok: false, message: "Inserisci il numero fattura." };
+  }
+
+  return {
+    ok: true,
+    row: {
+      kind: expense.kind as ExpenseKind,
+      amount_cents: expense.amount,
+      document_date: expense.documentDate,
+      payment_date: expense.paymentDate,
+      invoice_number: expense.kind === "fattura" ? invoice : null,
+      terms: expense.terms as PaymentTerms,
+    },
+  };
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function isCents(value: number): boolean {

@@ -20,8 +20,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[0.68rem] font-bold tracking-[0.16em]">01 / OGGI</p>
-        <h1 className="mt-2 text-4xl">{formatDay(todayDate)}</h1>
+        <h1 className="text-4xl md:text-5xl">{formatDay(todayDate)}</h1>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
@@ -30,7 +29,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm text-primary-foreground">Oggi</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl text-primary-foreground">
+            <p className="text-3xl text-primary-foreground">
               <Money cents={today ? dayTotal(today) : 0} />
             </p>
             <p className="mt-1 text-sm text-primary-foreground/85">Totale chiusura + Non Registrato</p>
@@ -42,7 +41,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">
-              <Money cents={week.result} />
+              <Money cents={week.result} className={resultTone(week.result)} />
             </p>
             <p className="mt-1 text-sm text-muted-foreground">Incassi − uscite pagate</p>
           </CardContent>
@@ -53,7 +52,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">
-              <Money cents={month.result} />
+              <Money cents={month.result} className={resultTone(month.result)} />
             </p>
             <p className="mt-1 text-sm text-muted-foreground">Stesso criterio della settimana</p>
           </CardContent>
@@ -131,6 +130,12 @@ export default function DashboardPage() {
   );
 }
 
+function resultTone(cents: number) {
+  if (cents < 0) return "text-primary";
+  if (cents > 0) return "text-success";
+  return "";
+}
+
 function Row({ term, cents }: { term: string; cents: number }) {
   return (
     <div>
@@ -159,9 +164,9 @@ function Bar({
         <span>{label}</span>
         <Money cents={cents} className="font-semibold" />
       </div>
-      <div className="h-2 rounded-full bg-muted" aria-hidden="true">
+      <div className="h-2 bg-muted" aria-hidden="true">
         <div
-          className={`h-2 rounded-full ${tone === "primary" ? "bg-primary" : "bg-gold"}`}
+          className={`h-2 ${tone === "primary" ? "bg-primary" : "bg-gold"}`}
           style={{ width: `${Math.max(width, 4)}%` }}
         />
       </div>
