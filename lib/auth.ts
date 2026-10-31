@@ -22,14 +22,14 @@ export function loginEmails(): string[] {
 
 export function magicLinkFailure(message: string): string {
   const text = message.toLowerCase();
+  if (text.includes("signup")) {
+    return "La creazione di nuovi utenti è spenta. In Authentication, provider Email, riaccendila e salva.";
+  }
   if (text.includes("redirect") || text.includes("not allowed")) {
     return "Supabase rifiuta il ritorno all'app. In URL Configuration il Site URL deve essere http://127.0.0.1:3456 e tra i Redirect URLs deve esserci http://127.0.0.1:3456/auth/callback.";
   }
   if (text.includes("rate limit")) {
     return "La posta di Supabase accetta 2 email all'ora per tutto il progetto. Il tetto di quest'ora è già pieno. Riprova fra un'ora.";
-  }
-  if (text.includes("signup")) {
-    return "La creazione di nuovi utenti è spenta. In Authentication, provider Email, riaccendila e salva.";
   }
   if (text.includes("fetch failed") || text.includes("network") || text.includes("enotfound")) {
     return "Non riesco a contattare Supabase da questo computer. Riprova tra poco.";

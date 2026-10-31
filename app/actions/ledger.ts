@@ -3,12 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { isIsoDate, todayIso } from "@/lib/dates";
 import { requireSession } from "@/lib/ledger";
-import { KIND_LABEL, TERMS_OPTIONS, type Closing, type Expense, type ExpenseKind, type PaymentTerms } from "@/lib/types";
+import { isUuid, parseExpense, validClosingCents } from "@/lib/validate";
+import type { Closing, Expense } from "@/lib/types";
 
 export type ActionResult = { ok: true } | { ok: false; message: string };
-
-const kinds = new Set<string>(Object.keys(KIND_LABEL));
-const terms = new Set<string>(TERMS_OPTIONS);
 
 export async function saveClosing(closing: Closing): Promise<ActionResult> {
   const session = await requireSession();
@@ -16,7 +14,7 @@ export async function saveClosing(closing: Closing): Promise<ActionResult> {
   if (!isIsoDate(closing.date) || closing.date > todayIso()) {
     return { ok: false, message: "La data non può essere successiva a oggi." };
   }
-  if (!isCents(closing.cash) || !isCents(closing.electronic) || !isCents(closing.drawer)) {
+  if (!validClosingCents(closing.cash) || !validClosingCents(closing.electronic) || !validClosingCents(closing.drawer)) {
     return { ok: false, message: "Gli importi della chiusura non sono validi." };
   }
 
@@ -129,53 +127,3 @@ export async function payExpense(id: string, paymentDate: string): Promise<Actio
   return { ok: true };
 }
 
-function parseExpense(
-  expense: Omit<Expense, "id">,
-):
-  | { ok: true; row: {
-      kind: ExpenseKind;
-      amount_cents: number;
-      document_date: string;
-      payment_date: string | null;
-      invoice_number: string | null;
-      terms: PaymentTerms;
-    } }
-  | { ok: false; message: string } {
-  if (!kinds.has(expense.kind)) return { ok: false, message: "Tipo di uscita non valido." };
-  if (!terms.has(expense.terms ?? "")) return { ok: false, message: "Tipo di pagamento non valido." };
-  if (!isIsoDate(expense.documentDate) || expense.documentDate > todayIso()) {
-    return { ok: false, message: "La consegna non può essere successiva a oggi." };
-  }
-  if (!Number.isInteger(expense.amount) || expense.amount <= 0 || expense.amount > 100_000_000_00) {
-    return { ok: false, message: "Inserisci un importo maggiore di zero." };
-  }
-  if (expense.paymentDate !== null) {
-    if (!isIsoDate(expense.paymentDate) || expense.paymentDate > todayIso() || expense.paymentDate < expense.documentDate) {
-      return { ok: false, message: "La data di pagamento non è valida." };
-    }
-  }
-  const invoice = expense.invoiceNumber?.trim() ?? "";
-  if (expense.kind === "fattura" && invoice === "") {
-    return { ok: false, message: "Inserisci il numero fattura." };
-  }
-
-  return {
-    ok: true,
-    row: {
-      kind: expense.kind as ExpenseKind,
-      amount_cents: expense.amount,
-      document_date: expense.documentDate,
-      payment_date: expense.paymentDate,
-      invoice_number: expense.kind === "fattura" ? invoice : null,
-      terms: expense.terms as PaymentTerms,
-    },
-  };
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
-function isCents(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 100_000_000_00;
-}

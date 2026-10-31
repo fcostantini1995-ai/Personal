@@ -1,60 +1,15 @@
-# Piano di regressione
+# Regressione
 
-Cassa di Pasta & Paste. Due accessi, un solo libro. I totali non sono salvati: si ricalcolano dalle chiusure e dalle uscite pagate.
+`npm test` esegue `tests/regression.test.mts`. Non scrive sul database, non invia email, non ha bisogno di una sessione. Copre le regole della cassa. Si rilancia a ogni intervento, e si aggiorna nello stesso intervento se una regola cambia.
 
-Esegui questo piano in locale, dentro una sessione già aperta, sul server di sviluppo del repository (la root, non `mockup/`). La data di riferimento è oggi in Europe/Rome. Non si va oltre oggi.
+Il giro in browser resta per quello che il test non vede: una schermata si apre, la sezione attiva è quella giusta, Elimina chiede conferma, Scarica PDF apre la stampa senza navigazione. Si fa solo se l'intervento tocca quella schermata. Una riga di prova si chiama `TEST-REGRESSIONE`, si cancella prima di chiudere, e i totali di settimana e mese tornano quelli di partenza.
 
-Dopo ogni intervento aggiorna le suite il cui comportamento è cambiato. Non aggiungere controlli per funzioni che non esistono.
+## Cosa asserisce la suite
 
-## Pulizia
+Accesso. I due indirizzi sono abilitati, gli altri no. In development compaiono entrambi nella scelta, fuori si vede solo il titolare. L'indirizzo di prova resta comunque autorizzato. Gli errori del link hanno il testo giusto, compreso il tetto di 2 email all'ora. Lo schema condivide le righe fra i due accessi e consente modifica e cancellazione.
 
-- Una riga di prova ha un numero fattura riconoscibile, per esempio `TEST-REGRESSIONE`, importo piccolo, data di oggi.
-- Una chiusura di prova si fa solo su un giorno che non ha già una chiusura. Se oggi è vuoto, usa oggi. Salva, controlla, elimina.
-- Prima di chiudere il giro, la riga di prova non compare più in Uscite né nel resoconto, e il giorno di prova non compare tra i giorni del mese.
-- Annota i totali di mese e settimana prima della prova e confrontali dopo la cancellazione. Devono tornare uguali.
+Cassa. Non Registrato è contante fisico meno contanti, anche negativo. Il totale del giorno è chiusura più Non Registrato. Lo zero è un importo valido. Una data ha una sola chiusura, e un nuovo salvataggio la corregge. Il giorno è quello di Roma.
 
-## Fumo
+Uscite. Gli otto tipi passano. L'ordine dei pagamenti è allo scarico, 7, 10, 15, 30. Importo zero o non intero, consegna futura, fattura senza numero, pagamento prima della consegna o dopo oggi: il salvataggio rifiuta. Le uscite che non sono fatture non tengono il numero. Segnare pagata una riga nuova la mette a oggi. Se era già pagata in una data ancora valida, quella data resta. Togliere Pagato la toglie dai totali. Paga fattura agisce solo su una riga ancora aperta, con consegna non successiva al pagamento.
 
-Da fare a ogni intervento, anche solo visivo.
-
-- Oggi, Cassa, Uscite e Resoconto si aprono e la sezione attiva è segnata.
-- I quattro totali visibili restano coerenti tra loro: il risultato di Oggi per settimana e mese coincide con il Resoconto dello stesso periodo.
-- Il resoconto mese mostra le tre righe di incasso (contante da chiusura, pagamenti elettronici, contante non registrato), poi Incassi, Uscite pagate, Totale.
-- Le fatture aperte compaiono in elenco e non entrano nel totale.
-- Su telefono la barra in basso non copre l'ultimo controllo. Su desktop la navigazione è a sinistra.
-- Non parte nessuno scroll orizzontale della pagina.
-
-## Accesso
-
-- In locale la scelta dell'indirizzo include anche l'indirizzo di prova. Fuori da development quell'indirizzo non è in elenco, ma resta abilitato.
-- Un indirizzo fuori elenco non entra.
-- Non inviare un link solo per provare questa suite se il tetto orario è già stato usato.
-
-## Cassa
-
-- Un giorno vuoto dice che la chiusura non c'è. Salvando Contanti, Elettronici e contante fisico, il giorno risulta già salvato.
-- Non Registrato è contante fisico meno contanti. Può essere negativo. Il totale del giorno è chiusura più Non Registrato.
-- Riaprire il giorno mostra gli importi salvati. Un secondo salvataggio corregge la stessa data, non ne crea un'altra.
-- Elimina chiusura chiede conferma. Dopo, i campi sono vuoti e il giorno si può salvare di nuovo.
-- Il giorno successivo a oggi è disabilitato.
-
-## Uscite
-
-- Nuova uscita: senza importo, senza data, o senza numero se è una fattura, il salvataggio si ferma e dice quale campo manca.
-- Una fattura da pagare non entra nel resoconto. Paga fattura la segna pagata oggi e da quel momento entra nel periodo di oggi.
-- Modifica cambia importo, consegna, numero, stato e tipo di pagamento. Togliere Pagato la toglie dai totali pagati.
-- Elimina chiede conferma. La riga sparisce dall'elenco e dal resoconto.
-- Le uscite che non sono fatture stanno nella stessa lista e hanno le stesse azioni.
-- I tipi di pagamento restano, in quest'ordine: allo scarico, 7, 10, 15, 30 giorni.
-
-## Resoconto
-
-- Settimana, mese e anno si aprono. Il periodo successivo a quello che contiene oggi è disabilitato. Torna a oggi riporta al periodo corrente.
-- La settimana è lunedì-domenica.
-- Nel mese e nell'anno, Incassi è la somma delle tre righe. Totale è Incassi meno Uscite pagate.
-- Un pagamento entra nel periodo della data di pagamento, non della consegna.
-- Scarica PDF apre la stampa del browser. In quella vista non si vedono navigazione, schede e il pulsante.
-
-## Dopo una modifica ai calcoli
-
-Oltre alla suite toccata, rileggi mese e settimana e confronta almeno un giorno noto: il suo importo in elenco è il totale del giorno, e la somma delle tre righe di incasso del periodo coincide con Incassi.
+Resoconto. La settimana è lunedì-domenica. Mese e anno sono civili. Non si avanza oltre il periodo che contiene oggi. Incassi è la somma di contante, elettronici e non registrato. Il totale è incassi meno uscite pagate. Un pagamento conta nella data di pagamento, non in quella di consegna. Le fatture aperte con consegna entro la fine del periodo restano in elenco e non si sottraggono. Le altre uscite aperte non stanno in quell'elenco. Togliere una chiusura o un pagamento ricalcola il periodo. L'anno salta i mesi vuoti. La stampa nasconde navigazione, schede e il pulsante.

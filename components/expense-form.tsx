@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldError, Input, Label, Select } from "@/components/ui/field";
 import { centsToInput, parseEuro } from "@/lib/money";
 import { todayIso } from "@/lib/dates";
+import { resolvePaymentDate } from "@/lib/validate";
 import { KIND_LABEL, TERMS_LABEL, TERMS_OPTIONS, type Expense, type ExpenseKind, type PaymentTerms } from "@/lib/types";
 import type { ActionResult } from "@/app/actions/ledger";
 
@@ -47,14 +48,12 @@ export function ExpenseForm({
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
-    const previousPayment = initial?.paymentDate ?? null;
-    let paymentDate: string | null = null;
-    if (paid) {
-      paymentDate =
-        previousPayment && previousPayment >= documentDate && previousPayment <= today
-          ? previousPayment
-          : today;
-    }
+    const paymentDate = resolvePaymentDate({
+      paid,
+      documentDate,
+      previousPayment: initial?.paymentDate ?? null,
+      today,
+    });
 
     setPending(true);
     const result = await onSubmit({

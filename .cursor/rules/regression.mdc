@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Regressione
 
-Prima di dichiarare finito un intervento che tocca schermate, calcoli, salvataggi o accesso, leggi `docs/regression.md`. Esegui la suite fumo e le suite toccate dal cambiamento.
+Prima di dichiarare finito un intervento che tocca schermate, calcoli, salvataggi o accesso, esegui `npm test` e leggi `docs/regression.md`. La suite automatica copre le regole. In browser resta solo ciò che il test non può vedere: navigazione, stampa, conferma di cancellazione.
 
 - Non inventare controlli. Se un flusso cambia, aggiorna il piano nello stesso intervento.
 - Cancella fatture e chiusure di prova prima di chiudere. I libri veri restano com'erano.
